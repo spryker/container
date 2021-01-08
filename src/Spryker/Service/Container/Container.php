@@ -31,6 +31,11 @@ class Container implements ContainerInterface, ArrayAccess
     protected $services = [];
 
     /**
+     * @var array
+     */
+    protected $servicesCallbacks = [];
+
+    /**
      * @var mixed[]
      */
     protected $raw = [];
@@ -130,18 +135,45 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function set(string $id, $service): void
     {
-        if (isset($this->frozenServices[$id])) {
-            throw new FrozenServiceException(sprintf('The service "%s" is frozen (already in use) and can not be changed at this point anymore.', $id));
+        $container = $this;
+
+        $is_dedicated = ($service instanceof DedicatedServiceInterface);
+
+        if (
+            $is_dedicated
+            || !(
+                is_object($service)
+                && method_exists($service, '__invoke')
+            )
+        ) {
+            if ($is_dedicated) {
+                $this->servicesCallbacks[$id] = $service->getService();
+                return;
+            }
+            $this->servicesCallbacks[$id] = function () use ($service, $is_dedicated) {
+                return $service;
+            };
+            return;
         }
 
-        $this->services[$id] = $service;
-        $this->serviceIdentifier[$id] = true;
+        $this->servicesCallbacks[$id] = function () use ($service, $id, $container) {
+            $result = $resolvedService = $service($container);
+
+            if (!is_callable($result)) {
+                $resolvedService = function () use ($result) {
+                    return $result;
+                };
+            }
+            $container->servicesCallbacks[$id] = $resolvedService;
+            return $result;
+        };
 
         if ($this->currentlyExtending === $id) {
             return;
         }
 
         $this->extendService($id, $service);
+
     }
 
     /**
@@ -181,7 +213,7 @@ class Container implements ContainerInterface, ArrayAccess
      */
     protected function hasService(string $id): bool
     {
-        return isset($this->serviceIdentifier[$id]);
+        return isset($this->servicesCallbacks[$id]);
     }
 
     /**
@@ -201,6 +233,10 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function get($id)
     {
+//        if (APPLICATION === 'GLUE') {
+//            file_put_contents('/data/xxx.log', 'gotcha' . PHP_EOL, FILE_APPEND | LOCK_EX);
+//        }
+
         $id = $this->getServiceIdentifier($id);
 
         if ($this->hasGlobalService($id)) {
@@ -243,39 +279,48 @@ class Container implements ContainerInterface, ArrayAccess
         return $resolvedService;
     }
 
-    /**
-     * @param string $id
-     *
-     * @throws \Spryker\Service\Container\Exception\NotFoundException
-     *
-     * @return mixed
-     */
+//    /**
+//     * @param string $id
+//     *
+//     * @throws \Spryker\Service\Container\Exception\NotFoundException
+//     *
+//     * @return mixed
+//     */
+//    protected function getService(string $id)
+//    {
+//        if (!$this->hasService($id)) {
+//            throw new NotFoundException(sprintf('The requested service "%s" was not found in the container!', $id));
+//        }
+//
+//        if (
+//            isset($this->raw[$id])
+//            || !is_object($this->services[$id])
+//            || isset($this->protectedServices[$this->services[$id]])
+//            || !method_exists($this->services[$id], '__invoke')
+//        ) {
+//            return $this->services[$id];
+//        }
+//
+//        if (isset($this->factoryServices[$this->services[$id]])) {
+//            return $this->services[$id]($this);
+//        }
+//
+//        $rawService = $this->services[$id];
+//        $resolvedService = $this->services[$id] = $rawService($this);
+//        $this->raw[$id] = $rawService;
+//
+//        $this->frozenServices[$id] = true;
+//
+//        return $resolvedService;
+//    }
+
     protected function getService(string $id)
     {
-        if (!$this->hasService($id)) {
+        if (!isset($this->servicesCallbacks[$id])) {
             throw new NotFoundException(sprintf('The requested service "%s" was not found in the container!', $id));
         }
 
-        if (
-            isset($this->raw[$id])
-            || !is_object($this->services[$id])
-            || isset($this->protectedServices[$this->services[$id]])
-            || !method_exists($this->services[$id], '__invoke')
-        ) {
-            return $this->services[$id];
-        }
-
-        if (isset($this->factoryServices[$this->services[$id]])) {
-            return $this->services[$id]($this);
-        }
-
-        $rawService = $this->services[$id];
-        $resolvedService = $this->services[$id] = $rawService($this);
-        $this->raw[$id] = $rawService;
-
-        $this->frozenServices[$id] = true;
-
-        return $resolvedService;
+        return $this->servicesCallbacks[$id]($this);
     }
 
     /**
@@ -403,7 +448,7 @@ class Container implements ContainerInterface, ArrayAccess
             throw new ContainerException('The passed service for extension is not a closure and is not invokable.');
         }
 
-        if (isset($this->frozenServices[$id])) {
+        if (isset($this->servicesCallbacks[$id])) {
             throw new FrozenServiceException(sprintf('The service "%s" is marked as frozen an can\'t be extended at this point.', $id));
         }
 
@@ -411,7 +456,7 @@ class Container implements ContainerInterface, ArrayAccess
             throw new ContainerException(sprintf('The requested service "%s" is not an object and is not invokable.', $id));
         }
 
-        if (isset($this->protectedServices[$this->services[$id]])) {
+        if ($this->services[$id] instanceof DedicatedServiceInterface) {
             throw new ContainerException(sprintf('The requested service "%s" is protected and can\'t be extended.', $id));
         }
 
@@ -566,9 +611,7 @@ class Container implements ContainerInterface, ArrayAccess
             throw new ContainerException('The passed service is not a closure and is not invokable.');
         }
 
-        $this->protectedServices->attach($service);
-
-        return $service;
+        return new DedicatedService($service);
     }
 
     /**
@@ -584,9 +627,9 @@ class Container implements ContainerInterface, ArrayAccess
             throw new ContainerException('The passed service is not a closure and is not invokable.');
         }
 
-        $this->factoryServices->attach($service);
+//        $this->factoryServices->attach($service);
 
-        return $service;
+        return new DedicatedService($service);
     }
 
     /**
@@ -598,7 +641,7 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function offsetExists($offset): bool
     {
-        $this->triggerError(sprintf('ArrayAccess for the container in Spryker (e.g. `isset($container[\'%s\'])`) is no longer supported! Please use `ContainerInterface:has()` instead.', $offset));
+        $this->triggerError(sprintf('ArrayAccess the container in Spryker (e.g. isset($container[\'%s\'])) is no longer supported! Please use "ContainerInterface:has()" instead.', $offset));
 
         return $this->has($offset);
     }
@@ -612,7 +655,7 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function offsetGet($offset)
     {
-        $this->triggerError(sprintf('ArrayAccess for the container in Spryker (e.g. `$foo = $container[\'%s\']`) is no longer supported! Please use `ContainerInterface:get()` instead.', $offset));
+        $this->triggerError(sprintf('ArrayAccess the container in Spryker (e.g. $foo = $container[\'%s\']) is no longer supported! Please use "ContainerInterface:get()" instead.', $offset));
 
         return $this->get($offset);
     }
@@ -627,7 +670,7 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function offsetSet($offset, $value): void
     {
-        $this->triggerError(sprintf('ArrayAccess for the container in Spryker (e.g. `$container[\'%s\'] = $foo`) is no longer supported! Please use `ContainerInterface:set()` instead.', $offset));
+        $this->triggerError(sprintf('ArrayAccess the container in Spryker (e.g. $container[\'%s\'] = $foo) is no longer supported! Please use "ContainerInterface:set()" instead.', $offset));
 
         // When extend is called for a service which is not registered so far, we store the extension and wait for the service to be added.
         // For BC reasons code like `$container['service'] = $container->extend('service', callable)` is valid and still needs to be supported
@@ -654,7 +697,7 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function offsetUnset($offset): void
     {
-        $this->triggerError(sprintf('ArrayAccess for the container in Spryker (e.g. `unset($container[\'%s\'])`) is no longer supported! Please use `ContainerInterface:remove()` instead.', $offset));
+        $this->triggerError(sprintf('ArrayAccess the container in Spryker (e.g. unset($container[\'%s\'])) is no longer supported! Please use "ContainerInterface:remove()" instead.', $offset));
 
         $this->remove($offset);
     }
