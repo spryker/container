@@ -1,5 +1,9 @@
 {
     "exclude": {
         "pimple/pimple": "spryker/container provides a Pimple replacement."
+    },
+    "include": {
+        "spryker/kernel": "For new CodeBucket functionality",
+        "spryker/transfer": "For new strict functionality"
     }
 }

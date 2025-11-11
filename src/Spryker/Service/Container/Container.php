@@ -15,6 +15,7 @@ use Spryker\Service\Container\Exception\FrozenServiceException;
 use Spryker\Service\Container\Exception\NotFoundException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use UnitEnum;
 
 /**
  * @implements \ArrayAccess<string, mixed>
@@ -24,102 +25,99 @@ class Container implements ContainerInterface, ArrayAccess
     /**
      * @var string
      */
-    public const TRIGGER_ERROR = 'container_trigger_error';
+    public const string TRIGGER_ERROR = 'container_trigger_error';
 
     /**
      * @var bool|null
      */
-    protected $isTriggerErrorEnabled;
+    protected ?bool $isTriggerErrorEnabled = null;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $services = [];
+    protected array $services = [];
 
     /**
      * @var array<mixed>
      */
-    protected $raw = [];
+    protected array $raw = [];
 
     /**
      * @var array<bool>
      */
-    protected $serviceIdentifier = [];
+    protected array $serviceIdentifier = [];
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
-    protected static $globalServices = [];
+    protected static array $globalServices = [];
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
-    protected static $globalServiceIdentifier = [];
+    protected static array $globalServiceIdentifier = [];
 
     /**
      * @var array<bool>
      */
-    protected static $globalFrozenServices = [];
+    protected static array $globalFrozenServices = [];
 
     /**
      * @var \SplObjectStorage<object, mixed>
      */
-    protected $factoryServices;
+    protected SplObjectStorage $factoryServices;
 
     /**
      * @var \SplObjectStorage<object, mixed>
      */
-    protected $protectedServices;
+    protected SplObjectStorage $protectedServices;
 
     /**
      * @var array<bool>
      */
-    protected $frozenServices = [];
+    protected array $frozenServices = [];
 
     /**
      * This is a storage for services which should be extended, but at the point where extend was called the service was not found.
      *
      * @var array<array<\Closure>>
      */
-    protected $toBeExtended = [];
+    protected array $toBeExtended = [];
 
     /**
      * @var string|null
      */
-    protected $currentlyExtending;
+    protected ?string $currentlyExtending = null;
 
     /**
      * @var string|null
      */
-    protected $currentExtendingHash;
+    protected ?string $currentExtendingHash = null;
 
     /**
      * @var array<bool>
      */
-    protected $sharedServiceHashes = [];
+    protected array $sharedServiceHashes = [];
 
-    /**
-     * @var \Symfony\Component\OptionsResolver\OptionsResolver|null
-     */
-    protected $configurationResolver;
+    protected ?OptionsResolver $configurationResolver = null;
 
     /**
      * @var array<string>
      */
-    protected static $aliases = [];
+    protected static array $aliases = [];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $parameters = [];
 
     /**
      * @param array $services
      */
     public function __construct(array $services = [])
     {
-        if ($this->factoryServices === null) {
-            $this->factoryServices = new SplObjectStorage();
-        }
-
-        if ($this->protectedServices === null) {
-            $this->protectedServices = new SplObjectStorage();
-        }
+        $this->factoryServices = new SplObjectStorage();
+        $this->protectedServices = new SplObjectStorage();
 
         foreach ($services as $key => $value) {
             $this->set($key, $value);
@@ -200,12 +198,7 @@ class Container implements ContainerInterface, ArrayAccess
         return isset(static::$globalServiceIdentifier[$id]);
     }
 
-    /**
-     * @param string $id
-     *
-     * @return mixed
-     */
-    public function get($id)
+    public function get(string $id): mixed
     {
         $id = $this->getServiceIdentifier($id);
 
@@ -730,5 +723,35 @@ class Container implements ContainerInterface, ArrayAccess
 
             $this->set($id, $service);
         }
+    }
+
+    public function initialized(string $id): bool
+    {
+        $id = $this->getServiceIdentifier($id);
+
+        if (isset(static::$globalFrozenServices[$id])) {
+            return true;
+        }
+
+        return isset($this->frozenServices[$id]);
+    }
+
+    public function getParameter(string $name): array|bool|string|int|float|\UnitEnum|null
+    {
+        if (!$this->hasParameter($name)) {
+            return null;
+        }
+
+        return $this->parameters[$name];
+    }
+
+    public function hasParameter(string $name): bool
+    {
+        return array_key_exists($name, $this->parameters);
+    }
+
+    public function setParameter(string $name, UnitEnum|float|array|bool|int|string|null $value): void
+    {
+        $this->parameters[$name] = $value;
     }
 }

@@ -2,7 +2,13 @@ parameters:
     level: 8
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
+        - '#Template type B of method .+ContainerDelegator::get\(\) is not referenced in a parameter.#'
+        - '#Template type C of method .+ContainerDelegator::get\(\) is not referenced in a parameter.#'
+        - '#Call to an undefined method ReflectionType::isBuiltin\(\).#'
         - '#Parameter \#1 \$object of function spl_object_hash expects object, class-string\|object given.#'
         - '#Parameter \#1 \$service of method Spryker\\Service\\Container\\Container::factory\(\) expects object, class-string\|object given#'
         -
             identifier: missingType.iterableValue
+
+    excludePaths:
+        - '%rootDir%/../../../src/Spryker/Container/src/Spryker/Service/Container/ProxyFactory.php'

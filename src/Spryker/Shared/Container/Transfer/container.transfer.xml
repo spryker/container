@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<transfers xmlns="spryker:transfer-01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="spryker:transfer-01 http://static.spryker.com/transfer-01.xsd">
+
+    <transfer name="ContainerBuilderRequest" strict="true">
+        <property name="namespace" type="string" description="The Applications namespace e.g. Spryker."/>
+        <property name="moduleName" type="string" description="The Module name e.g. Customer."/>
+        <property name="configFile" type="string" description="The file name that defines the services."/>
+        <property name="cache" type="bool" description="Set this to define if the container should be compiled as a single file or as optimized files."/>
+        <property name="cwd" type="string" description="The path of a directory to scan for classes."/>
+    </transfer>
+
+    <transfer name="ContainerBuilderResponse" strict="true">
+        <property name="isSuccessful" type="bool"/>
+        <property name="errors" type="array" singular="error"/>
+    </transfer>
+
+</transfers>
