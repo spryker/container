@@ -11,6 +11,7 @@ use Codeception\Module;
 use Codeception\TestInterface;
 use ReflectionProperty;
 use Spryker\Service\Container\Container;
+use Spryker\Service\Container\ContainerDelegator;
 use Spryker\Service\Container\ContainerInterface;
 use Spryker\Shared\Kernel\Container\ContainerProxy;
 use SprykerTest\Shared\Testify\Helper\ModuleHelperConfigTrait;
@@ -35,7 +36,11 @@ class ContainerHelper extends Module
     public function getContainer(): ContainerInterface
     {
         if ($this->container === null) {
-            $this->container = new ContainerProxy(['logger' => null, 'debug' => $this->config[static::CONFIG_KEY_DEBUG], 'charset' => 'UTF-8']);
+            $this->container = new ContainerProxy([
+                'logger' => null,
+                'debug' => $this->config[static::CONFIG_KEY_DEBUG],
+                'charset' => 'UTF-8',
+            ]);
         }
 
         return $this->container;
@@ -51,6 +56,7 @@ class ContainerHelper extends Module
         parent::_before($test);
 
         $this->resetStaticProperties();
+        $this->resetContainerDelegator();
 
         $this->container = null;
     }
@@ -64,6 +70,8 @@ class ContainerHelper extends Module
     {
         if ($this->container !== null) {
             $this->resetStaticProperties();
+            $this->resetContainerDelegator();
+            $this->container = null;
         }
     }
 
@@ -83,6 +91,7 @@ class ContainerHelper extends Module
     protected function resetStaticProperties(): void
     {
         $staticProperties = [
+            'aliases',
             'globalServices',
             'globalServiceIdentifier',
             'globalFrozenServices',
@@ -93,5 +102,12 @@ class ContainerHelper extends Module
             $reflectedProperty->setAccessible(true);
             $reflectedProperty->setValue([]);
         }
+    }
+
+    protected function resetContainerDelegator(): void
+    {
+        $reflectedProperty = new ReflectionProperty(ContainerDelegator::class, 'instance');
+        $reflectedProperty->setAccessible(true);
+        $reflectedProperty->setValue(null);
     }
 }
