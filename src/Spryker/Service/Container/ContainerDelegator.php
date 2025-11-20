@@ -14,6 +14,8 @@ use Spryker\Shared\Kernel\Container\ContainerProxy;
 use Symfony\Component\DependencyInjection\ContainerInterface as SymfonyContainerInterface;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use UnitEnum;
 
 class ContainerDelegator implements SymfonyContainerInterface
@@ -459,5 +461,53 @@ class ContainerDelegator implements SymfonyContainerInterface
         $namespaces = array_flip($this->config->getCoreNamespaces());
 
         return isset($namespaces[$namespace]);
+    }
+
+    /**
+     * Returns the IDs of services that have been removed during container compilation.
+     *
+     * This method is required by Symfony's ContainerDebugCommand to check if a service
+     * was removed or inlined during compilation.
+     *
+     * Note: Only checks project_container (Symfony) as getRemovedIds() is Symfony-specific
+     * for tracking removed services during container compilation. The application_container
+     * (Spryker) does not implement this method.
+     *
+     * @return array<string, true>
+     */
+    public function getRemovedIds(): array
+    {
+        $removedIds = [];
+
+        if (isset($this->containers['project_container'])) {
+            $projectContainer = $this->containers['project_container'];
+
+            if (method_exists($projectContainer, 'getRemovedIds')) {
+                $removedIds = array_merge($removedIds, $projectContainer->getRemovedIds());
+            }
+        }
+
+        return $removedIds;
+    }
+
+    /**
+     * This method is required by Symfony's cache warmers and other components.
+     *
+     * Note: Only checks project_container (Symfony) as ParameterBagInterface is Symfony-specific.
+     * The application_container (Spryker) does not have a parameter bag.
+     * Returns an empty ParameterBag when project_container is not available to maintain
+     * compatibility with Symfony's ContainerInterface contract (non-nullable return type).
+     */
+    public function getParameterBag(): ParameterBagInterface
+    {
+        if (isset($this->containers['project_container'])) {
+            $projectContainer = $this->containers['project_container'];
+
+            if (method_exists($projectContainer, 'getParameterBag')) {
+                return $projectContainer->getParameterBag();
+            }
+        }
+
+        return new ParameterBag();
     }
 }
