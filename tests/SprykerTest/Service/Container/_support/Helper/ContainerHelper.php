@@ -51,21 +51,6 @@ class ContainerHelper extends Module
      *
      * @return void
      */
-    public function _before(TestInterface $test): void
-    {
-        parent::_before($test);
-
-        $this->resetStaticProperties();
-        $this->resetContainerDelegator();
-
-        $this->container = null;
-    }
-
-    /**
-     * @param \Codeception\TestInterface $test
-     *
-     * @return void
-     */
     public function _after(TestInterface $test): void
     {
         if ($this->container !== null) {

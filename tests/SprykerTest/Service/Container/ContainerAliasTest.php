@@ -11,7 +11,6 @@ use Closure;
 use Codeception\Test\Unit;
 use Spryker\Service\Container\Container;
 use Spryker\Service\Container\Exception\AliasException;
-use Spryker\Service\Container\Exception\NotFoundException;
 
 /**
  * Auto-generated group annotations
@@ -151,10 +150,7 @@ class ContainerAliasTest extends Unit
         $this->assertFalse($container->has(static::SERVICE));
         $this->assertFalse($container->has(static::SERVICE_ALIAS));
 
-        $this->expectException(NotFoundException::class);
-        $this->expectExceptionMessage(sprintf('The requested service "%s" was not found in the container!', static::SERVICE_ALIAS));
-
-        $container->get(static::SERVICE_ALIAS);
+        $this->assertNull($container->get(static::SERVICE_ALIAS));
     }
 
     /**

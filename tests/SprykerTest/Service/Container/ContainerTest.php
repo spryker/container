@@ -11,7 +11,6 @@ use Codeception\Test\Unit;
 use Spryker\Service\Container\Container;
 use Spryker\Service\Container\Exception\ContainerException;
 use Spryker\Service\Container\Exception\FrozenServiceException;
-use Spryker\Service\Container\Exception\NotFoundException;
 use stdClass;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
@@ -185,17 +184,6 @@ class ContainerTest extends Unit
 
         //Assert
         $this->assertNotSame($service, $service2);
-    }
-
-    /**
-     * @return void
-     */
-    public function testGetThrowsAnExceptionWhenRequestedServiceNotExists(): void
-    {
-        $this->expectException(NotFoundException::class);
-
-        $container = new Container();
-        $container->get(static::SERVICE);
     }
 
     /**

@@ -78,6 +78,11 @@ class Container implements ContainerInterface, ArrayAccess
     protected array $frozenServices = [];
 
     /**
+     * @var array<string, bool>
+     */
+    protected array $removedServices = [];
+
+    /**
      * This is a storage for services which should be extended, but at the point where extend was called the service was not found.
      *
      * @var array<array<\Closure>>
@@ -136,6 +141,20 @@ class Container implements ContainerInterface, ArrayAccess
     {
         if (isset($this->frozenServices[$id])) {
             throw new FrozenServiceException(sprintf('The service "%s" is frozen (already in use) and can not be changed at this point anymore.', $id));
+        }
+
+        /**
+         * Services which are marked as removed should not be added again. This prevents from adding services into the container
+         * which were removed before. This is used to use Symfony services instead of Spryker services.
+         *
+         * When the application is using the FrameworkBundle, we need to make sure that services which may conflict with
+         * the ones from Symfony added through an ApplicationPlugin will no longer be able to set. This prevents from updating
+         * ApplicationPlugins used on the project-level to remove services which conflict with Symfony services.
+         *
+         * @see \Spryker\Shared\Application\Kernel::initializeBundles()
+         */
+        if (isset($this->removedServices[$id])) {
+            return;
         }
 
         $this->services[$id] = $service;
@@ -245,14 +264,16 @@ class Container implements ContainerInterface, ArrayAccess
     /**
      * @param string $id
      *
-     * @throws \Spryker\Service\Container\Exception\NotFoundException
-     *
      * @return mixed
      */
     protected function getService(string $id)
     {
         if (!$this->hasService($id)) {
-            throw new NotFoundException(sprintf('The requested service "%s" was not found in the container!', $id));
+            /**
+             * This covers the case when a service is no longer provided through an ApplicationPlugin but through a service definition
+             * of the DependencyInjectionContainer. In this case we need to delegate the service retrieval to the ContainerDelegator.
+             */
+            return ContainerDelegator::getInstance()->get($id);
         }
 
         if (
@@ -476,6 +497,8 @@ class Container implements ContainerInterface, ArrayAccess
         $this->removeAliases($id);
         $this->removeService($id);
         $this->removeGlobalService($id);
+
+        $this->removedServices[$id] = true;
     }
 
     /**
@@ -736,7 +759,7 @@ class Container implements ContainerInterface, ArrayAccess
         return isset($this->frozenServices[$id]);
     }
 
-    public function getParameter(string $name): array|bool|string|int|float|\UnitEnum|null
+    public function getParameter(string $name): array|bool|string|int|float|UnitEnum|null
     {
         if (!$this->hasParameter($name)) {
             return null;

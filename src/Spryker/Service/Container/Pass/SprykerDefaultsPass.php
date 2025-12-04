@@ -58,10 +58,6 @@ class SprykerDefaultsPass implements CompilerPassInterface
             return;
         }
 
-        if ($container->has($interfaceName)) {
-            return;
-        }
-
         $resolvedClass = $this->findResolvableClassForInterface($interfaceName);
 
         if ($resolvedClass) {

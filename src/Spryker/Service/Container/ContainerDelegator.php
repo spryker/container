@@ -123,24 +123,11 @@ class ContainerDelegator implements SymfonyContainerInterface
             if (isset($this->containers['project_container'])) {
                 $projectContainer = $this->containers['project_container'];
 
-                /**
-                 * The Project Container may have services from Symfony, so we need to check this container as well.
-                 *
-                 * The `http_kernel` service is a special case to handle as we have two of them available.
-                 * On from Spryker, which comes through one of the HttpApplicationPlugins and the one provided by Symfony's
-                 * Framework bundle. We need to return the one from Spryker and not the one from Symfony. If we return
-                 * the one from Symfony, we would kick out Spryker completely and would see the Symfony landing page.
-                 *
-                 * Skipping this service here, ensure we are asking the `application_container` which has the correct HttpKernel.
-                 */
-                if ($id !== 'http_kernel' && $projectContainer->has($id)) {
+                if ($projectContainer->has($id)) {
                     return $this->resolvedServices[$id] = $projectContainer->get($id);
                 }
 
-                // See above, known case, we don't need to log this.
-                if ($id !== 'http_kernel') {
-                    $this->persistCheckedContainersForExceptionHandling($id, $projectContainer::class);
-                }
+                $this->persistCheckedContainersForExceptionHandling($id, $projectContainer::class);
             }
 
             if (isset($this->containers['application_container'])) {
