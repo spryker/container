@@ -497,4 +497,9 @@ class ContainerDelegator implements SymfonyContainerInterface
 
         return new ParameterBag();
     }
+
+    public function getContainer(string $containerName): mixed
+    {
+        return $this->containers[$containerName] ?? null;
+    }
 }
