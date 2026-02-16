@@ -272,13 +272,9 @@ class ContainerDelegator implements SymfonyContainerInterface
     {
         $parts = explode('\\', $serviceId);
 
-        if (isset($parts[0])) {
-            $parts[0] = $projectOrganization;
+        $parts[0] = $projectOrganization;
 
-            return implode('\\', $parts);
-        }
-
-        return $serviceId;
+        return implode('\\', $parts);
     }
 
     protected function getCodeBucketServiceId(string $projectServiceId): string

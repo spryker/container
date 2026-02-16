@@ -701,7 +701,7 @@ class Container implements ContainerInterface, ArrayAccess
     protected function isTriggerErrorEnabled(): bool
     {
         if ($this->isTriggerErrorEnabled === null) {
-            $this->isTriggerErrorEnabled = ($this->has(static::TRIGGER_ERROR)
+            $this->isTriggerErrorEnabled = (bool)($this->has(static::TRIGGER_ERROR)
                 ? $this->get(static::TRIGGER_ERROR)
                 : false);
         }

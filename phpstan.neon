@@ -12,16 +12,6 @@ parameters:
         # Defensive programming: type checks kept for runtime safety
         -
             identifier: function.alreadyNarrowedType
-        # Defensive programming: isset checks kept for runtime safety
-        -
-            identifier: isset.offset
-        # Related to defensive isset checks above
-        -
-            identifier: deadCode.unreachable
-        # Return type mismatch from container get() method
-        -
-            identifier: return.type
-        # Unused trait warning
         -
             identifier: trait.unused
 
