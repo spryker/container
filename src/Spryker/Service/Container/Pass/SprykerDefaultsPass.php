@@ -47,17 +47,32 @@ class SprykerDefaultsPass implements CompilerPassInterface
             }
 
             $this->registerDefaultService($container, sprintf('%s\Zed\%s\Business\%sFacadeInterface', $organisationName, $moduleName, $moduleName));
+            $this->registerDefaultService($container, sprintf('%s\Zed\%s\%sConfig', $organisationName, $moduleName, $moduleName));
+
+            $this->registerDefaultService($container, sprintf('%s\Glue\%s\%sConfig', $organisationName, $moduleName, $moduleName));
+
             $this->registerDefaultService($container, sprintf('%s\Client\%s\%sClientInterface', $organisationName, $moduleName, $moduleName));
+            $this->registerDefaultService($container, sprintf('%s\Client\%s\%sConfig', $organisationName, $moduleName, $moduleName));
+
             $this->registerDefaultService($container, sprintf('%s\Service\%s\%sServiceInterface', $organisationName, $moduleName, $moduleName));
         }
     }
 
-    protected function registerDefaultService(ContainerBuilder $container, string $interfaceName): void
+    protected function registerDefaultService(ContainerBuilder $container, string $interfaceOrClassName): void
     {
-        if (!interface_exists($interfaceName)) {
+        if (interface_exists($interfaceOrClassName)) {
+            $this->registerDefaultServiceByInterface($container, $interfaceOrClassName);
+
             return;
         }
 
+        if (class_exists($interfaceOrClassName)) {
+            $this->registerDefaultServiceByClass($container, $interfaceOrClassName);
+        }
+    }
+
+    protected function registerDefaultServiceByInterface(ContainerBuilder $container, string $interfaceName): void
+    {
         $resolvedClass = $this->findResolvableClassForInterface($interfaceName);
 
         if ($resolvedClass) {
@@ -68,7 +83,7 @@ class SprykerDefaultsPass implements CompilerPassInterface
 
             $optionalInterfaceName = $resolvedClass . 'Interface';
 
-            if (interface_exists($optionalInterfaceName)) {
+            if (interface_exists($interfaceName)) {
                 $interfaceName = $optionalInterfaceName;
             }
 
@@ -91,6 +106,16 @@ class SprykerDefaultsPass implements CompilerPassInterface
         $proxyDefinition->setPublic(true);
 
         $container->setDefinition($interfaceName, $proxyDefinition);
+    }
+
+    protected function registerDefaultServiceByClass(ContainerBuilder $container, string $className): void
+    {
+        $definition = new Definition($className);
+        $definition->setPublic(true);
+
+        $this->markDependenciesAsLazy($container, $className);
+
+        $container->setDefinition($className, $definition);
     }
 
     /**
