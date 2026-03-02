@@ -30,9 +30,6 @@ class ContainerHelper extends Module
      */
     protected $container;
 
-    /**
-     * @return \Spryker\Service\Container\ContainerInterface
-     */
     public function getContainer(): ContainerInterface
     {
         if ($this->container === null) {
@@ -46,11 +43,6 @@ class ContainerHelper extends Module
         return $this->container;
     }
 
-    /**
-     * @param \Codeception\TestInterface $test
-     *
-     * @return void
-     */
     public function _after(TestInterface $test): void
     {
         if ($this->container !== null) {
@@ -60,9 +52,6 @@ class ContainerHelper extends Module
         }
     }
 
-    /**
-     * @return void
-     */
     protected function setDefaultConfig(): void
     {
         $this->config = [
@@ -70,9 +59,6 @@ class ContainerHelper extends Module
         ];
     }
 
-    /**
-     * @return void
-     */
     protected function resetStaticProperties(): void
     {
         $staticProperties = [

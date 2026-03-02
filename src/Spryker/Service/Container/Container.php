@@ -116,9 +116,6 @@ class Container implements ContainerInterface, ArrayAccess
      */
     protected array $parameters = [];
 
-    /**
-     * @param array $services
-     */
     public function __construct(array $services = [])
     {
         $this->factoryServices = new SplObjectStorage();
@@ -197,21 +194,11 @@ class Container implements ContainerInterface, ArrayAccess
         return ($this->hasService($id) || $this->hasGlobalService($id));
     }
 
-    /**
-     * @param string $id
-     *
-     * @return bool
-     */
     protected function hasService(string $id): bool
     {
         return isset($this->serviceIdentifier[$id]);
     }
 
-    /**
-     * @param string $id
-     *
-     * @return bool
-     */
     protected function hasGlobalService(string $id): bool
     {
         return isset(static::$globalServiceIdentifier[$id]);
@@ -228,11 +215,6 @@ class Container implements ContainerInterface, ArrayAccess
         return $this->getService($id);
     }
 
-    /**
-     * @param string $id
-     *
-     * @return string
-     */
     protected function getServiceIdentifier(string $id): string
     {
         if (isset(static::$aliases[$id])) {
@@ -322,9 +304,6 @@ class Container implements ContainerInterface, ArrayAccess
         $this->addAliases($id, $configuration['alias']);
     }
 
-    /**
-     * @return \Symfony\Component\OptionsResolver\OptionsResolver
-     */
     protected function getConfigurationResolver(): OptionsResolver
     {
         if ($this->configurationResolver === null) {
@@ -344,11 +323,6 @@ class Container implements ContainerInterface, ArrayAccess
         return $this->configurationResolver;
     }
 
-    /**
-     * @param string $id
-     *
-     * @return void
-     */
     protected function makeGlobal(string $id): void
     {
         if (!$this->hasGlobalService($id)) {
@@ -487,11 +461,6 @@ class Container implements ContainerInterface, ArrayAccess
         return $extended;
     }
 
-    /**
-     * @param string $id
-     *
-     * @return void
-     */
     public function remove(string $id): void
     {
         $this->removeAliases($id);
@@ -501,11 +470,6 @@ class Container implements ContainerInterface, ArrayAccess
         $this->removedServices[$id] = true;
     }
 
-    /**
-     * @param string $id
-     *
-     * @return void
-     */
     protected function removeAliases(string $id): void
     {
         foreach ($this->getAliasesForService($id) as $alias) {
@@ -515,21 +479,11 @@ class Container implements ContainerInterface, ArrayAccess
         unset(static::$aliases[$id]);
     }
 
-    /**
-     * @param string $id
-     *
-     * @return array
-     */
     protected function getAliasesForService(string $id): array
     {
         return array_keys(static::$aliases, $id);
     }
 
-    /**
-     * @param string $id
-     *
-     * @return void
-     */
     protected function removeService(string $id): void
     {
         if ($this->hasService($id)) {
@@ -541,11 +495,6 @@ class Container implements ContainerInterface, ArrayAccess
         }
     }
 
-    /**
-     * @param string $id
-     *
-     * @return void
-     */
     protected function removeGlobalService(string $id): void
     {
         if ($this->hasGlobalService($id)) {
@@ -682,11 +631,6 @@ class Container implements ContainerInterface, ArrayAccess
         $this->remove($offset);
     }
 
-    /**
-     * @param string $message
-     *
-     * @return void
-     */
     protected function triggerError(string $message): void
     {
         if ($this->isTriggerErrorEnabled()) {
@@ -695,9 +639,6 @@ class Container implements ContainerInterface, ArrayAccess
         }
     }
 
-    /**
-     * @return bool
-     */
     protected function isTriggerErrorEnabled(): bool
     {
         if ($this->isTriggerErrorEnabled === null) {

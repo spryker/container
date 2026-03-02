@@ -50,9 +50,6 @@ class ContainerTest extends Unit
      */
     protected $errorIsTriggered = false;
 
-    /**
-     * @return void
-     */
     public function setUp(): void
     {
         parent::setUp();
@@ -62,9 +59,6 @@ class ContainerTest extends Unit
         $container->remove(static::SERVICE);
     }
 
-    /**
-     * @return void
-     */
     public function testSetAddsServiceOnConstruction(): void
     {
         //Arrange
@@ -81,9 +75,6 @@ class ContainerTest extends Unit
         $this->assertSame(static::SERVICE, $container->get(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testSetAddsService(): void
     {
         //Arrange
@@ -99,9 +90,6 @@ class ContainerTest extends Unit
         $this->assertSame(static::SERVICE, $container->get(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testSetThrowsAnExceptionWhenServiceToBeAddedAlreadyExistsAndWasAlreadyRequested(): void
     {
         $this->expectException(FrozenServiceException::class);
@@ -115,9 +103,6 @@ class ContainerTest extends Unit
         $container->set(static::SERVICE, $service);
     }
 
-    /**
-     * @return void
-     */
     public function testGetReturnsSameServiceInstanceOnConsecutiveCalls(): void
     {
         //Arrange
@@ -136,9 +121,6 @@ class ContainerTest extends Unit
         $this->assertSame($service, $service2);
     }
 
-    /**
-     * @return void
-     */
     public function testGetReturnsSameServiceInstanceOnConsecutiveCallsWithInvokableClass(): void
     {
         //Arrange
@@ -146,11 +128,6 @@ class ContainerTest extends Unit
         $container->set(static::SERVICE, function () {
             return new class
             {
-                /**
-                 * @param \Symfony\Component\HttpKernel\Event\RequestEvent $requestEvent
-                 *
-                 * @return void
-                 */
                 public function __invoke(RequestEvent $requestEvent): void
                 {
                 }
@@ -165,9 +142,6 @@ class ContainerTest extends Unit
         $this->assertSame($service, $service2);
     }
 
-    /**
-     * @return void
-     */
     public function testGetReturnsAlwaysANewServiceInstanceWhenServiceMarkedAsFactory(): void
     {
         //Arrange
@@ -186,18 +160,12 @@ class ContainerTest extends Unit
         $this->assertNotSame($service, $service2);
     }
 
-    /**
-     * @return void
-     */
     public function testHasReturnsFalseWhenServiceWasNotAdded(): void
     {
         $container = new Container();
         $this->assertFalse($container->has(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testHasReturnsTrueWhenServiceWasAdded(): void
     {
         $container = new Container();
@@ -207,9 +175,6 @@ class ContainerTest extends Unit
         $this->assertTrue($container->has(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testRemoveRemovesAService(): void
     {
         //Arrange
@@ -224,9 +189,6 @@ class ContainerTest extends Unit
         $this->assertFalse($container->has(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testRemoveWithNotExistingServiceIdentifier(): void
     {
         $container = new Container();
@@ -235,9 +197,6 @@ class ContainerTest extends Unit
         $this->assertFalse($container->has(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testFactoryThrowsAnExceptionWhenPassedServiceNotInvokable(): void
     {
         $this->expectException(ContainerException::class);
@@ -246,9 +205,6 @@ class ContainerTest extends Unit
         $container->factory(new stdClass());
     }
 
-    /**
-     * @return void
-     */
     public function testProtectThrowsAnExceptionWhenPassedServiceNotInvokable(): void
     {
         $this->expectException(ContainerException::class);
@@ -257,9 +213,6 @@ class ContainerTest extends Unit
         $container->protect(new stdClass());
     }
 
-    /**
-     * @return void
-     */
     public function testProtectedServiceIsNotResolved(): void
     {
         //Arrange
@@ -275,9 +228,6 @@ class ContainerTest extends Unit
         $this->assertSame($service, $container->get(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenPassedServiceIsNotAService(): void
     {
         $container = new Container();
@@ -289,9 +239,6 @@ class ContainerTest extends Unit
         $container->extend(static::SERVICE, 'not a service');
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenTheServiceToBeExtendedIsFrozen(): void
     {
         $container = new Container();
@@ -306,9 +253,6 @@ class ContainerTest extends Unit
         });
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenTheServiceToBeExtendedIsNotAnObjectOrNotInvokable(): void
     {
         $container = new Container();
@@ -319,9 +263,6 @@ class ContainerTest extends Unit
         });
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenTheServiceToBeExtendedIsProtected(): void
     {
         $container = new Container();
@@ -333,9 +274,6 @@ class ContainerTest extends Unit
         });
     }
 
-    /**
-     * @return void
-     */
     public function testExtendAFactoryServiceWillReplaceTheServiceInTheFactoryCollection(): void
     {
         $container = new Container();
@@ -349,9 +287,6 @@ class ContainerTest extends Unit
         $this->assertSame('foobar', $container->get(static::SERVICE));
     }
 
-    /**
-     * @return void
-     */
     public function testExtendExtendsServiceWithProperty(): void
     {
         //Arrange
@@ -374,9 +309,6 @@ class ContainerTest extends Unit
         );
     }
 
-    /**
-     * @return void
-     */
     public function testExtendExtendsServiceWithPropertyAfterItWasDefined(): void
     {
         //Arrange
@@ -399,9 +331,6 @@ class ContainerTest extends Unit
         );
     }
 
-    /**
-     * @return void
-     */
     public function testTriggerErrorIsNotExecuted(): void
     {
         $container = new Container();
@@ -414,9 +343,6 @@ class ContainerTest extends Unit
         $this->errorIsTriggered = false;
     }
 
-    /**
-     * @return void
-     */
     public function testTriggerErrorIsExecutedWhenEnabled(): void
     {
         $container = new Container();
@@ -431,9 +357,6 @@ class ContainerTest extends Unit
         $this->errorIsTriggered = false;
     }
 
-    /**
-     * @return void
-     */
     public function setErrorTriggered(): void
     {
         $this->errorIsTriggered = true;

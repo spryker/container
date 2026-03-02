@@ -118,11 +118,6 @@ class SprykerDefaultsPass implements CompilerPassInterface
         $container->setDefinition($className, $definition);
     }
 
-    /**
-     * @param string $interfaceName
-     *
-     * @return string|null
-     */
     protected function findResolvableClassForInterface(string $interfaceName): ?string
     {
         $interfaceNameFragments = explode('\\', $interfaceName);
@@ -172,12 +167,6 @@ class SprykerDefaultsPass implements CompilerPassInterface
         return $classNameCandidates;
     }
 
-    /**
-     * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
-     * @param string $concreteClass
-     *
-     * @return void
-     */
     protected function markDependenciesAsLazy(ContainerBuilder $container, string $concreteClass): void
     {
         if (!class_exists($concreteClass)) {

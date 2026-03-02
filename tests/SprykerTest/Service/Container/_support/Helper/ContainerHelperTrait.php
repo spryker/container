@@ -11,9 +11,6 @@ use Codeception\Module;
 
 trait ContainerHelperTrait
 {
-    /**
-     * @return \SprykerTest\Service\Container\Helper\ContainerHelper
-     */
     protected function getContainerHelper(): ContainerHelper
     {
         /** @var \SprykerTest\Service\Container\Helper\ContainerHelper $containerHelper */
@@ -22,10 +19,5 @@ trait ContainerHelperTrait
         return $containerHelper;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return \Codeception\Module
-     */
     abstract protected function getModule(string $name): Module;
 }

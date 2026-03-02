@@ -44,9 +44,6 @@ class ContainerBuilderConsole extends Console
      */
     protected const OPTION_NO_CACHE = 'no-cache';
 
-    /**
-     * @return void
-     */
     protected function configure(): void
     {
         $this->setName('container:build')
@@ -87,12 +84,6 @@ class ContainerBuilderConsole extends Console
         parent::configure();
     }
 
-    /**
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     *
-     * @return int
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $organization = $input->getArgument(static::ARGUMENT_NAMESPACE);
@@ -121,11 +112,6 @@ class ContainerBuilderConsole extends Console
         return static::CODE_SUCCESS;
     }
 
-    /**
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     *
-     * @return \Generated\Shared\Transfer\ContainerBuilderRequestTransfer
-     */
     protected function createContainerBuilderRequestTransfer(InputInterface $input): ContainerBuilderRequestTransfer
     {
         $containerBuilderRequestTransfer = new ContainerBuilderRequestTransfer();

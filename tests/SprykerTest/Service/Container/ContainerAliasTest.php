@@ -48,9 +48,6 @@ class ContainerAliasTest extends Unit
      */
     protected const SERVICE_GLOBAL = 'global service';
 
-    /**
-     * @return void
-     */
     public function setUp(): void
     {
         parent::setUp();
@@ -63,9 +60,6 @@ class ContainerAliasTest extends Unit
         $container->remove(static::SERVICE_ALIAS_2);
     }
 
-    /**
-     * @return void
-     */
     public function testConfigureCanAddAnAliasForAService(): void
     {
         $container = new Container();
@@ -75,9 +69,6 @@ class ContainerAliasTest extends Unit
         $this->assertSame(static::SERVICE, $container->get(static::SERVICE_ALIAS));
     }
 
-    /**
-     * @return void
-     */
     public function testConfigureCanAddAliasesForAService(): void
     {
         $container = new Container();
@@ -92,9 +83,6 @@ class ContainerAliasTest extends Unit
         $this->assertSame(static::SERVICE, $container->get(static::SERVICE_ALIAS_2));
     }
 
-    /**
-     * @return void
-     */
     public function testConfigureAnAliasWhichIsAlreadyUsedForAnotherServiceWillThrowAnException(): void
     {
         $container = new Container();
@@ -107,9 +95,6 @@ class ContainerAliasTest extends Unit
         $container->configure(static::SERVICE_2, ['alias' => static::SERVICE_ALIAS]);
     }
 
-    /**
-     * @return void
-     */
     public function testConfigureCanAddAnAliasForAGlobalService(): void
     {
         $container = new Container();
@@ -124,9 +109,6 @@ class ContainerAliasTest extends Unit
         $this->assertSame(static::SERVICE_GLOBAL, $container->get(static::SERVICE_ALIAS));
     }
 
-    /**
-     * @return void
-     */
     public function testHasReturnsTrueForAnAliasedServiceIdentifierIfItExists(): void
     {
         $container = new Container();
@@ -136,9 +118,6 @@ class ContainerAliasTest extends Unit
         $this->assertTrue($container->has(static::SERVICE_ALIAS));
     }
 
-    /**
-     * @return void
-     */
     public function testRemoveAServiceAlsoRemovesAllAliasesForTheService(): void
     {
         $container = new Container();
@@ -153,11 +132,6 @@ class ContainerAliasTest extends Unit
         $this->assertNull($container->get(static::SERVICE_ALIAS));
     }
 
-    /**
-     * @param string $returnValue
-     *
-     * @return \Closure
-     */
     protected function createServiceClosure(string $returnValue = self::SERVICE): Closure
     {
         $service = function () use ($returnValue) {

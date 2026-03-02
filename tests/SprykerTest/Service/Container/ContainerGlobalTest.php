@@ -44,9 +44,6 @@ class ContainerGlobalTest extends Unit
      */
     protected const SERVICE_PROPERTY_2 = 'SERVICE_PROPERTY_2';
 
-    /**
-     * @return void
-     */
     public function setUp(): void
     {
         parent::setUp();
@@ -56,9 +53,6 @@ class ContainerGlobalTest extends Unit
         $container->remove(static::SERVICE);
     }
 
-    /**
-     * @return void
-     */
     public function testSetGlobalAddsAService(): void
     {
         $container = new Container();
@@ -70,9 +64,6 @@ class ContainerGlobalTest extends Unit
         $this->assertSame(static::SERVICE_GLOBAL, $container->get(static::SERVICE_GLOBAL));
     }
 
-    /**
-     * @return void
-     */
     public function testSetGlobalAddsAServiceAndMakesItGloballyAvailable(): void
     {
         $container = new Container();
@@ -86,9 +77,6 @@ class ContainerGlobalTest extends Unit
         $this->assertSame(static::SERVICE_GLOBAL, $container->get(static::SERVICE_GLOBAL));
     }
 
-    /**
-     * @return void
-     */
     public function testSetGlobalThrowsAnExceptionWhenServiceWasAlreadyRetrieved(): void
     {
         $container = new Container();
@@ -103,9 +91,6 @@ class ContainerGlobalTest extends Unit
         $container->setGlobal(static::SERVICE_GLOBAL, $service);
     }
 
-    /**
-     * @return void
-     */
     public function testGetGlobalReturnsSameServiceInstanceOnConsecutiveCalls(): void
     {
         $container = new Container();
@@ -121,9 +106,6 @@ class ContainerGlobalTest extends Unit
         $this->assertSame($service, $service2);
     }
 
-    /**
-     * @return void
-     */
     public function testHasReturnsFalseWhenGlobalServiceIsNotSet(): void
     {
         $container = new Container();
@@ -131,9 +113,6 @@ class ContainerGlobalTest extends Unit
         $this->assertFalse($container->has(static::SERVICE_GLOBAL), 'Service was found in the Container although it should not be in there.');
     }
 
-    /**
-     * @return void
-     */
     public function testHasReturnsTrueWhenGlobalServiceIsSet(): void
     {
         $container = new Container();
@@ -146,9 +125,6 @@ class ContainerGlobalTest extends Unit
         $this->assertTrue($container->has(static::SERVICE_GLOBAL), 'Service was not found in the Container although it should be in there.');
     }
 
-    /**
-     * @return void
-     */
     public function testRemoveRemovesAGlobalService(): void
     {
         $container = new Container();
@@ -160,9 +136,6 @@ class ContainerGlobalTest extends Unit
         $this->assertFalse($container->has(static::SERVICE_GLOBAL));
     }
 
-    /**
-     * @return void
-     */
     public function testConfigureWillThrowAnExceptionIfServiceIsNotSet(): void
     {
         $this->expectException(NotFoundException::class);
@@ -171,9 +144,6 @@ class ContainerGlobalTest extends Unit
         $container->configure(static::SERVICE, []);
     }
 
-    /**
-     * @return void
-     */
     public function testConfigureWithIsGlobalTrueWillMakeServiceGloballyAvailable(): void
     {
         $container = new Container();
@@ -186,9 +156,6 @@ class ContainerGlobalTest extends Unit
         $this->assertTrue($container->has(static::SERVICE), 'Expected that a normal added service can be made globally available but service not found in new Container');
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenPassedServiceIsNotAService(): void
     {
         $container = new Container();
@@ -200,9 +167,6 @@ class ContainerGlobalTest extends Unit
         $container->extend(static::SERVICE_GLOBAL, 'not a service');
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenTheServiceToBeExtendedIsFrozen(): void
     {
         $container = new Container();
@@ -217,9 +181,6 @@ class ContainerGlobalTest extends Unit
         });
     }
 
-    /**
-     * @return void
-     */
     public function testExtendThrowsExceptionWhenTheServiceToBeExtendedIsNotAnObjectOrNotInvokable(): void
     {
         $container = new Container();
@@ -232,9 +193,6 @@ class ContainerGlobalTest extends Unit
         });
     }
 
-    /**
-     * @return void
-     */
     public function testExtendExtendsAGlobalService(): void
     {
         $container = new Container();
