@@ -11,12 +11,15 @@ use Generated\Shared\Transfer\ContainerBuilderRequestTransfer;
 use Generated\Shared\Transfer\ContainerBuilderResponseTransfer;
 use Spryker\Service\Container\Pass\BridgePass;
 use Spryker\Service\Container\Pass\ProxyPass;
+use Spryker\Service\Container\Pass\SecurityDiscoveryPass;
 use Spryker\Service\Container\Pass\SprykerDefaultsPass;
 use Spryker\Service\Container\Pass\StackResolverPass;
+use Spryker\Service\Container\ProxyFactory;
 use Symfony\Component\Config\Builder\ConfigBuilderGenerator;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\Filesystem\Filesystem;
@@ -58,11 +61,17 @@ class ContainerBuilder
         }
 
         $containerBuilder = new SymfonyContainerBuilder();
+
+        $proxyFactoryDefinition = new Definition(ProxyFactory::class);
+        $proxyFactoryDefinition->setPublic(true);
+        $containerBuilder->setDefinition(ProxyFactory::class, $proxyFactoryDefinition);
+
         $containerBuilder
             // We need to pass the namespace aka organisation into the Pass to be able to skip using specific container in specific cases.
             // Check the description and implementation in the Pass itself
             ->addCompilerPass(new ProxyPass())
             ->addCompilerPass(new SprykerDefaultsPass())
+            ->addCompilerPass(new SecurityDiscoveryPass())
             ->addCompilerPass(new BridgePass())
             ->addCompilerPass(new StackResolverPass());
 

@@ -12,7 +12,7 @@ use ReflectionException;
 use ReflectionNamedType;
 use Spryker\Service\Container\ContainerConfig;
 use Spryker\Service\Container\ProxyFactory;
-use Spryker\Zed\ModuleFinder\Business\ModuleFinderFacade;
+use Spryker\Service\ModuleFinder\ModuleFinderService;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -35,9 +35,9 @@ class SprykerDefaultsPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container): void
     {
-        $moduleFinderFacade = new ModuleFinderFacade();
+        $moduleFinderService = new ModuleFinderService();
 
-        foreach ($moduleFinderFacade->getModules() as $moduleTransfer) {
+        foreach ($moduleFinderService->getModules() as $moduleTransfer) {
             $moduleName = $moduleTransfer->getName();
             $organisationName = $moduleTransfer->getOrganization()?->getName();
 
@@ -110,12 +110,33 @@ class SprykerDefaultsPass implements CompilerPassInterface
 
     protected function registerDefaultServiceByClass(ContainerBuilder $container, string $className): void
     {
-        $definition = new Definition($className);
+        $resolvedClass = $this->resolveProjectClassOverride($className);
+
+        $definition = new Definition($resolvedClass);
         $definition->setPublic(true);
 
-        $this->markDependenciesAsLazy($container, $className);
+        $this->markDependenciesAsLazy($container, $resolvedClass);
 
         $container->setDefinition($className, $definition);
+    }
+
+    protected function resolveProjectClassOverride(string $className): string
+    {
+        $classNameFragments = explode('\\', $className);
+
+        if (!$this->isCoreNamespace($classNameFragments[0])) {
+            return $className;
+        }
+
+        $candidates = $this->getClassNameCandidates($classNameFragments[0], $className);
+
+        foreach ($candidates as $candidate) {
+            if ($candidate !== $className && class_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $className;
     }
 
     protected function findResolvableClassForInterface(string $interfaceName): ?string

@@ -10,6 +10,9 @@ namespace Spryker\Service\Container\Attributes;
 use Attribute;
 use Spryker\Service\Container\Exception\StackAttributeDefinitionException;
 
+/**
+ * @deprecated Use {@link \Spryker\Service\Container\Attributes\Plugins} instead.
+ */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class Stack
 {

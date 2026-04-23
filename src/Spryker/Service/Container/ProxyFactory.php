@@ -12,8 +12,10 @@ use ReflectionMethod;
 
 class ProxyFactory
 {
-    public function __construct(protected LazyLoadingValueHolderFactory $factory = new LazyLoadingValueHolderFactory())
-    {
+    public function __construct(
+        protected LazyLoadingValueHolderFactory $factory = new LazyLoadingValueHolderFactory(),
+        protected ContainerConfig $config = new ContainerConfig(),
+    ) {
     }
 
     public function createProxy(string $className): object
@@ -40,25 +42,41 @@ class ProxyFactory
      */
     public function createPluginProviderProxy(string $dependencyProviderClassName, string $getterMethodName): array
     {
-        $containerDelegator = ContainerDelegator::getInstance();
-
-        /**
-         * Check if we may have an overridden DependencyProvider on the project level.
-         *
-         * If not, create an instance of it.
-         *
-         * Since the methods are protected, we need to use reflection to be able to access the protected method. Return
-         * the plugins provided on the project level (empty stack if not provided on the project level as defined in the core.)
-         */
-        if ($containerDelegator->has($dependencyProviderClassName)) {
-            $dependencyProvider = $containerDelegator->get($dependencyProviderClassName);
-        } else {
-            $dependencyProvider = new $dependencyProviderClassName();
-        }
+        $dependencyProvider = $this->resolveDependencyProvider($dependencyProviderClassName);
 
         $reflectionMethod = new ReflectionMethod($dependencyProvider, $getterMethodName);
         $reflectionMethod->setAccessible(true);
 
         return $reflectionMethod->invoke($dependencyProvider);
+    }
+
+    /**
+     * Resolves the DependencyProvider by checking:
+     * 1. The container for explicit project-level registrations (backward compatible)
+     * 2. Project namespaces for class overrides (e.g., Pyz) via class_exists
+     * 3. Falls back to the core class
+     */
+    protected function resolveDependencyProvider(string $dependencyProviderClassName): object
+    {
+        // Respects explicit project-level registrations in ApplicationServices.php
+        $containerDelegator = ContainerDelegator::getInstance();
+
+        if ($containerDelegator->has($dependencyProviderClassName)) {
+            return $containerDelegator->get($dependencyProviderClassName);
+        }
+
+        // Namespace resolution: check project namespaces for overrides
+        $parts = explode('\\', $dependencyProviderClassName);
+        $organisation = $parts[0];
+
+        foreach ($this->config->getProjectNamespaces() as $projectNamespace) {
+            $projectClassName = str_replace($organisation . '\\', $projectNamespace . '\\', $dependencyProviderClassName);
+
+            if ($projectClassName !== $dependencyProviderClassName && class_exists($projectClassName)) {
+                return new $projectClassName();
+            }
+        }
+
+        return new $dependencyProviderClassName();
     }
 }

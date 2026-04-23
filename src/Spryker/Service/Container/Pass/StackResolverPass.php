@@ -9,6 +9,8 @@ namespace Spryker\Service\Container\Pass;
 
 use ReflectionClass;
 use ReflectionException;
+use ReflectionMethod;
+use Spryker\Service\Container\Attributes\Plugins;
 use Spryker\Service\Container\Attributes\Stack;
 use Spryker\Service\Container\ProxyFactory;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
@@ -77,6 +79,8 @@ class StackResolverPass implements CompilerPassInterface
                     $definition->setArgument((string)$stackAttribute->provideToArgument, new TaggedIteratorArgument((string)$stackAttribute->service));
                 }
             }
+
+            $this->resolvePluginsAttributes($container, $definition, $constructor);
         }
     }
 
@@ -92,6 +96,48 @@ class StackResolverPass implements CompilerPassInterface
 
         // Allow setting this with and without $ prefix.
         $definition->setArgument('$' . ltrim((string)$stackAttribute->provideToArgument, '$'), new Reference($pluginStackServiceId));
+    }
+
+    protected function resolvePluginsAttributes(
+        ContainerBuilder $container,
+        Definition $definition,
+        ReflectionMethod $constructor,
+    ): void {
+        foreach ($constructor->getParameters() as $parameter) {
+            $pluginsAttributes = $parameter->getAttributes(Plugins::class);
+
+            if (!$pluginsAttributes) {
+                continue;
+            }
+
+            /** @var \Spryker\Service\Container\Attributes\Plugins $pluginsAttribute */
+            $pluginsAttribute = $pluginsAttributes[0]->newInstance();
+            $dependencyProvider = $this->resolveDependencyProvider((string)$definition->getClass());
+            $argumentName = sprintf('$%s', $parameter->getName());
+
+            $pluginStackServiceId = sprintf('%s.%s', $definition->getClass(), $argumentName);
+
+            $factoryDefinition = new Definition('array');
+            $factoryDefinition->setFactory([new Reference(ProxyFactory::class), 'createPluginProviderProxy']);
+            $factoryDefinition->setArguments([$dependencyProvider, $pluginsAttribute->dependencyProviderMethod]);
+
+            $container->setDefinition($pluginStackServiceId, $factoryDefinition);
+
+            $definition->setArgument($argumentName, new Reference($pluginStackServiceId));
+        }
+    }
+
+    /**
+     * Resolves the DependencyProvider fully qualified class name from the service class namespace.
+     *
+     * Convention: `{Organization}\{Layer}\{Module}\{Module}DependencyProvider`
+     */
+    protected function resolveDependencyProvider(string $className): string
+    {
+        $namespaceParts = explode('\\', $className);
+        $moduleNamespace = sprintf('%s\%s\%s', $namespaceParts[0], $namespaceParts[1], $namespaceParts[2]);
+
+        return sprintf('%s\%sDependencyProvider', $moduleNamespace, $namespaceParts[2]);
     }
 
     protected function isPropelService(string $dependencyId): bool
