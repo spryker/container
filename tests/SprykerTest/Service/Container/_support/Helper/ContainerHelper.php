@@ -77,6 +77,10 @@ class ContainerHelper extends Module
 
     protected function resetContainerDelegator(): void
     {
+        if (!interface_exists('\Symfony\Component\DependencyInjection\ContainerInterface', false)) {
+            return;
+        }
+
         $reflectedProperty = new ReflectionProperty(ContainerDelegator::class, 'instance');
         $reflectedProperty->setAccessible(true);
         $reflectedProperty->setValue(null);
