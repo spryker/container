@@ -51,6 +51,24 @@ class ProxyFactory
     }
 
     /**
+     * Resolves a single plugin instance from a DependencyProvider method. Counterpart of
+     * {@see createPluginProviderProxy()} for the legacy single-plugin pattern used by
+     * modules that register one plugin per slot in their DependencyProvider.
+     *
+     * @see \Spryker\Service\Container\Attributes\Plugin
+     * @see \Spryker\Service\Container\Pass\StackResolverPass::resolvePluginAttributes()
+     */
+    public function createSinglePluginProviderProxy(string $dependencyProviderClassName, string $getterMethodName): object
+    {
+        $dependencyProvider = $this->resolveDependencyProvider($dependencyProviderClassName);
+
+        $reflectionMethod = new ReflectionMethod($dependencyProvider, $getterMethodName);
+        $reflectionMethod->setAccessible(true);
+
+        return $reflectionMethod->invoke($dependencyProvider);
+    }
+
+    /**
      * Resolves the DependencyProvider by checking:
      * 1. The container for explicit project-level registrations (backward compatible)
      * 2. Project namespaces for class overrides (e.g., Pyz) via class_exists

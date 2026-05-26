@@ -10,6 +10,8 @@ namespace Spryker\Service\Container\Pass;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use ReflectionNamedType;
+use Spryker\Service\Container\Attributes\Plugin;
 use Spryker\Service\Container\Attributes\Plugins;
 use Spryker\Service\Container\Attributes\Stack;
 use Spryker\Service\Container\ProxyFactory;
@@ -33,6 +35,13 @@ class StackResolverPass implements CompilerPassInterface
             }
 
             $definition = $container->getDefinition($id);
+
+            // Skip factory-built definitions (e.g. ProxyPass interface proxies). Their `class` is the
+            // consumer's class — reflecting it and applying constructor-attribute logic would set named
+            // arguments on the factory call (e.g. ProxyFactory::createProxy()) and break compilation.
+            if ($definition->getFactory() !== null) {
+                continue;
+            }
 
             $class = $definition->getClass();
 
@@ -81,6 +90,7 @@ class StackResolverPass implements CompilerPassInterface
             }
 
             $this->resolvePluginsAttributes($container, $definition, $constructor);
+            $this->resolvePluginAttributes($container, $definition, $constructor);
         }
     }
 
@@ -124,6 +134,38 @@ class StackResolverPass implements CompilerPassInterface
             $container->setDefinition($pluginStackServiceId, $factoryDefinition);
 
             $definition->setArgument($argumentName, new Reference($pluginStackServiceId));
+        }
+    }
+
+    protected function resolvePluginAttributes(
+        ContainerBuilder $container,
+        Definition $definition,
+        ReflectionMethod $constructor,
+    ): void {
+        foreach ($constructor->getParameters() as $parameter) {
+            $pluginAttributes = $parameter->getAttributes(Plugin::class);
+
+            if (!$pluginAttributes) {
+                continue;
+            }
+
+            /** @var \Spryker\Service\Container\Attributes\Plugin $pluginAttribute */
+            $pluginAttribute = $pluginAttributes[0]->newInstance();
+            $dependencyProvider = $this->resolveDependencyProvider((string)$definition->getClass());
+            $argumentName = sprintf('$%s', $parameter->getName());
+
+            $pluginServiceId = sprintf('%s.%s', $definition->getClass(), $argumentName);
+
+            $parameterType = $parameter->getType();
+            $definitionClass = ($parameterType instanceof ReflectionNamedType) ? $parameterType->getName() : 'object';
+
+            $factoryDefinition = new Definition($definitionClass);
+            $factoryDefinition->setFactory([new Reference(ProxyFactory::class), 'createSinglePluginProviderProxy']);
+            $factoryDefinition->setArguments([$dependencyProvider, $pluginAttribute->dependencyProviderMethod]);
+
+            $container->setDefinition($pluginServiceId, $factoryDefinition);
+
+            $definition->setArgument($argumentName, new Reference($pluginServiceId));
         }
     }
 
