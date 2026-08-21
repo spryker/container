@@ -33,7 +33,6 @@ class ContainerTraitParameterTest extends Unit
         $reflection = new ReflectionClass(ContainerDelegator::class);
         $instanceProperty = $reflection->getProperty('instance');
 
-        $instanceProperty->setAccessible(true);
         $instanceProperty->setValue(null, null);
     }
 

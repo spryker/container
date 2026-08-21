@@ -45,7 +45,6 @@ class ProxyFactory
         $dependencyProvider = $this->resolveDependencyProvider($dependencyProviderClassName);
 
         $reflectionMethod = new ReflectionMethod($dependencyProvider, $getterMethodName);
-        $reflectionMethod->setAccessible(true);
 
         return $reflectionMethod->invoke($dependencyProvider);
     }
@@ -63,7 +62,6 @@ class ProxyFactory
         $dependencyProvider = $this->resolveDependencyProvider($dependencyProviderClassName);
 
         $reflectionMethod = new ReflectionMethod($dependencyProvider, $getterMethodName);
-        $reflectionMethod->setAccessible(true);
 
         return $reflectionMethod->invoke($dependencyProvider);
     }

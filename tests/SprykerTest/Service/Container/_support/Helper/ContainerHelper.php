@@ -70,7 +70,6 @@ class ContainerHelper extends Module
 
         foreach ($staticProperties as $staticProperty) {
             $reflectedProperty = new ReflectionProperty(Container::class, $staticProperty);
-            $reflectedProperty->setAccessible(true);
             $reflectedProperty->setValue([]);
         }
     }
@@ -82,7 +81,6 @@ class ContainerHelper extends Module
         }
 
         $reflectedProperty = new ReflectionProperty(ContainerDelegator::class, 'instance');
-        $reflectedProperty->setAccessible(true);
         $reflectedProperty->setValue(null);
     }
 }
