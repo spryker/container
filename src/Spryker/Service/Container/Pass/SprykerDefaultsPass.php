@@ -81,13 +81,17 @@ class SprykerDefaultsPass implements CompilerPassInterface
 
             $this->markDependenciesAsLazy($container, $resolvedClass);
 
+            $container->setDefinition($interfaceName, $definition);
+
+            // The requested id is registered above even when the project overrides the class, so
+            // anything autowired by the CORE interface still resolves. The project's own interface
+            // is aliased onto it rather than given a second definition: both ids name one service,
+            // so consumers of either share the same instance.
             $optionalInterfaceName = $resolvedClass . 'Interface';
 
-            if (interface_exists($interfaceName)) {
-                $interfaceName = $optionalInterfaceName;
+            if ($optionalInterfaceName !== $interfaceName && interface_exists($optionalInterfaceName)) {
+                $container->setAlias($optionalInterfaceName, $interfaceName)->setPublic(true);
             }
-
-            $container->setDefinition($interfaceName, $definition);
 
             return;
         }
@@ -208,7 +212,12 @@ class SprykerDefaultsPass implements CompilerPassInterface
                 if ($type && !$type->isBuiltin() && $type instanceof ReflectionNamedType) {
                     $dependencyClass = $type->getName();
 
-                    if ($container->has($dependencyClass)) {
+                    // `hasDefinition()`, not `has()`: the latter is also true for an ALIAS, and
+                    // `getDefinition()` throws `ServiceNotFoundException` for one — which this
+                    // method's `catch` (ReflectionException only) would not absorb. Registering a
+                    // project interface as an alias above put such ids in the container for the
+                    // first time. The sibling passes already guard this way.
+                    if ($container->hasDefinition($dependencyClass)) {
                         $dependencyDefinition = $container->getDefinition($dependencyClass);
 
                         if ($dependencyDefinition->getFactory()) {
