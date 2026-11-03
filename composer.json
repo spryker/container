@@ -6,7 +6,7 @@
     "require": {
         "friendsofphp/proxy-manager-lts": "v1.0.18",
         "php": ">=8.3",
-        "psr/container": "^1.0.0",
+        "psr/container": "^1.0.0 || ^2.0.0",
         "spryker/kernel": "^3.48.0",
         "spryker/module-finder": "^1.4.0",
         "spryker/symfony": "^3.0.0",
