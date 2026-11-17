@@ -145,7 +145,7 @@ class ContainerDelegator implements SymfonyContainerInterface
             return null;
         }
 
-        [$namespace, $application, $module, $containerIdentifier] = $this->getPartsFromId($id);
+        [$namespace, , $module] = $this->getPartsFromId($id);
 
         /**
          * If the request is for a core service, first check for a project override to ensure Bucket -> Project -> Core resolving.
